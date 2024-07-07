@@ -1,12 +1,14 @@
-import { useState } from "react"
-import { createEmployee } from "../services/EmployeeService";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react"
+import { createEmployee, getEmployee, updateEmployee } from "../services/EmployeeService";
+import { useNavigate, useParams } from "react-router-dom";
 
 const EmployeeComponent = () => {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+
+  const {id} = useParams();
 
   const [errors, setErrors] = useState({
     firstName: '',
@@ -16,22 +18,37 @@ const EmployeeComponent = () => {
 
   const navigator = useNavigate();
 
-  function saveEmployee(e){
+  function saveOrUpdateEmployee(e){
     e.preventDefault();
+    const employee = {firstName, lastName, email}
 
     if(validateForm()){
-      const employee = {firstName, lastName, email}
-      createEmployee(employee).then((response) => {
-        console.log(response.data);
-        navigator('/employees')
-      });
+
+      // If the URL has an employee ID update else create the employee
+      if(id){
+        updateEmployee(id, employee).then(response => {
+          console.log(response.data);
+          navigator('/employees');
+        }).catch( error => {
+          console.error(error);
+        });
+      } else {
+        createEmployee(employee).then((response) => {
+          console.log(response.data);
+          navigator('/employees');
+        }).catch( error => {
+          console.error(error);
+        });
+      }
+
     }
+    
   }
 
   function validateForm(){
     let valid = true;
-
-    const errorsCopy = {... errors}
+    
+    let errorsCopy = {... errors}
 
     if(firstName.trim()){
       errorsCopy.firstName = '';
@@ -40,14 +57,14 @@ const EmployeeComponent = () => {
       valid = false;
     }
 
-    if(firstName.trim()){
+    if(lastName.trim()){
       errorsCopy.lastName = '';
     } else {
       errorsCopy.lastName = 'Last Name is Required';
       valid = false;
     }
 
-    if(firstName.trim()){
+    if(email.trim()){
       errorsCopy.email = '';
     } else {
       errorsCopy.email = 'Email is Required';
@@ -59,13 +76,36 @@ const EmployeeComponent = () => {
     return valid;
 
   }
+  
+  function pageTitle(){
+    if(id){
+      return <h2 className="text-center">Edit Employee</h2>
+    }
+    else {
+      return <h2 className="text-center">Add Employee</h2>
+    }
+  }
+
+  useEffect(()=>{
+    if(id){
+      getEmployee(id).then((response) => {
+        setFirstName(response.data.firstName);
+        setLastName(response.data.lastName);
+        setEmail(response.data.email);
+      }).catch(error=>{
+        console.error(error);
+      });
+    }
+  }, [id]);
 
   return (
     <div className="container">
       <br/> <br/> <br/>
       <div className="row">
         <div className="card col-md-6 offset-md-3 offset-md-3">
-          <h2 className="text-center">Add Employee</h2>
+          {
+            pageTitle()
+          }
           <div className="card-body">
             <form>
               <div className="form-group mb-2">
@@ -104,7 +144,7 @@ const EmployeeComponent = () => {
                 />
                 { errors.email && <div className="invalid-feedback"> {errors.email} </div> }
               </div>
-              <button className="btn btn-success" onClick={saveEmployee}>Submit</button>
+              <button className="btn btn-success" onClick={saveOrUpdateEmployee}>Submit</button>
             </form>
           </div>
         </div>
