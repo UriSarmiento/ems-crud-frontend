@@ -31,12 +31,17 @@ const ListEmployeeComponent = () => {
         });
     }, []);
 
+
     function addNewEmployee(){
         navigator('/add-employee');
     }
 
     function updateEmployee(id){
         navigator(`/edit-employee/${id}`)
+    }
+
+    function deleteEmployee(id){
+        navigator(`/delete-employee/${id}`)
     }
 
 
@@ -64,7 +69,7 @@ const ListEmployeeComponent = () => {
                             <td>{employee.email}</td>
                             <td>
                                 <button className='btn btn-info' onClick={() => updateEmployee(employee.id)}>Edit</button>
-                                <button className='btn btn-danger'>Delete</button>
+                                <button className='btn btn-danger' onClick={() => deleteEmployee(employee.id)}>Delete</button>
                             </td>
                         </tr>
                     )
